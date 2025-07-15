@@ -19,7 +19,6 @@ taskRouter.put("/:taskId", updateTaskController);
 taskRouter.delete("/:taskId", deleteTaskController);
 taskRouter.get("/my-tasks", authenticateUser, getMyTasksController);
 
-
 taskRouter.post("/:taskId/smart-assign", smartAssignController);
 
 export default taskRouter;

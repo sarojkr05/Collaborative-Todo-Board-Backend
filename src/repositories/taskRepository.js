@@ -6,7 +6,7 @@ export const create = async (taskData) => {
     return task;
   } catch (error) {
     if (error.code === 11000) {
-      throw new Error("A task with this title already exists."); // ✅ override here
+      throw new Error("A task with this title already exists.");
     }
     throw error;
   }

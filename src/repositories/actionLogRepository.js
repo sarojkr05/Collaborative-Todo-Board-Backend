@@ -1,11 +1,10 @@
 import ActionLog from "../models/actionLogModel.js";
 
 export const logAction = (userId, action, taskId) => {
-  if (!userId) console.warn("⚠️ Missing userId in logAction");
   return ActionLog.create({
     user: userId,
     action,
-    task: taskId
+    task: taskId,
   });
 };
 

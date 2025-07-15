@@ -19,4 +19,5 @@ const logSchema = new mongoose.Schema({
   }
 });
 
-export default mongoose.model("ActionLog", logSchema);
+const ActionLog = mongoose.model("ActionLog", logSchema);
+export default ActionLog;

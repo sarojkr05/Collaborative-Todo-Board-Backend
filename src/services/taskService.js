@@ -1,27 +1,33 @@
 import { logAction } from "../repositories/actionLogRepository.js";
-import { create, deleteTask, findAll, findById, update } from "../repositories/taskRepository.js";
+import {
+  create,
+  deleteTask,
+  findAll,
+  findById,
+  update,
+} from "../repositories/taskRepository.js";
 import User from "../models/userModel.js";
 import Task from "../models/taskModel.js";
 
-  export const createTask = async (taskData, userId, io) => {
-    if (["Todo", "In Progress", "Done"].includes(taskData.title.trim())) {
-      throw new Error("Task title cannot match column names.");
-    }
-    try {
-      const task = await create(taskData);
-      await logAction(userId, "Task Created", task._id);
-    
-      io.emit("task_created", task);
-      io.emit("log_created");
-    
-      return {
-        message: "Task created successfully",
-        task,
-      };
-    } catch (error) {
+export const createTask = async (taskData, userId, io) => {
+  if (["Todo", "In Progress", "Done"].includes(taskData.title.trim())) {
+    throw new Error("Task title cannot match column names.");
+  }
+  try {
+    const task = await create(taskData);
+    await logAction(userId, "Task Created", task._id);
+
+    io.emit("task_created", task);
+    io.emit("log_created");
+
+    return {
+      message: "Task created successfully",
+      task,
+    };
+  } catch (error) {
     throw error;
-    }
-  };
+  }
+};
 
 export const getAllTasks = async () => {
   try {
@@ -39,6 +45,7 @@ export const updateTask = async (taskId, updatedData, userId, io) => {
     if (!task) {
       throw new Error("Task not found!");
     }
+
     if (
       updatedData.lastModified &&
       new Date(updatedData.lastModified) < task.lastModified
@@ -48,36 +55,45 @@ export const updateTask = async (taskId, updatedData, userId, io) => {
       err.task = task;
       throw err;
     }
-    const updated = await update(taskId, { ...updatedData, lastModified: new Date() });
-    await logAction(userId, `Updated task: ${updated.title}`, updated._id)
-    //Emit update event
+
+    const updated = await update(taskId, {
+      ...updatedData,
+      lastModified: new Date(),
+    });
+
+    await logAction(userId, `Updated task: ${updated.title}`, updated._id);
+
     io.emit("task_updated", updated);
     io.emit("log_created");
+
     return {
-        message: "Task updated successfully",
-        task: updated
-    }
-  } catch (error) { console.log(error) }
+      message: "Task updated successfully",
+      task: updated,
+    };
+  } catch (error) {
+    console.log("❗ Error in updateTask service:", error.message);
+    throw error;
+  }
 };
 
 export const taskDelete = async (taskId, userId, io) => {
-    try {
-        const task = await deleteTask(taskId);
-        if (!task) {
-            throw new Error("Task not found!");
-        }
-        await logAction(userId, `Deleted task: ${task.title}`, task._id);
-        io.emit("task_deleted", task._id);
-        io.emit("log_created");
+  try {
+    const task = await deleteTask(taskId);
+    if (!task) {
+      throw new Error("Task not found!");
+    }
+    await logAction(userId, `Deleted task: ${task.title}`, task._id);
+    io.emit("task_deleted", task._id);
+    io.emit("log_created");
 
-        return {
-            message: "Task deleted successfully",
-        }
-    } catch (error) {
+    return {
+      message: "Task deleted successfully",
+    };
+  } catch (error) {
     console.log(error);
     throw new Error(`Error deleting task: ${error.message}`);
   }
-}
+};
 
 export const assignSmartUser = async (taskId, userId, io) => {
   const task = await Task.findById(taskId);
@@ -107,11 +123,15 @@ export const assignSmartUser = async (taskId, userId, io) => {
   task.assignedUser = selectedUser._id;
   await task.save();
 
-  await logAction(userId, `Smart assigned task: ${task.title} to ${selectedUser.name}`, task._id);
+  await logAction(
+    userId,
+    `Smart assigned task: ${task.title} to ${selectedUser.name}`,
+    task._id
+  );
   io.emit("toast", {
-  message: `Smart assigned "${task.title}" to ${selectedUser.name}`,
-  type: "success",
-});
+    message: `Smart assigned "${task.title}" to ${selectedUser.name}`,
+    type: "success",
+  });
   io.emit("log_created");
 
   return {
